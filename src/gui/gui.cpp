@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 
+#include <ftxui/component/component.hpp>
 #include "ftxui/component/captured_mouse.hpp"      // for ftxui
 #include "ftxui/component/component.hpp"           // for Menu
 #include "ftxui/component/component_options.hpp"   // for MenuOption
@@ -81,91 +82,118 @@ void CopyToClipboard(const std::string& text)
 
 using namespace ftxui;
 
-void GUI::DrawMenu() noexcept 
+std::vector<std::string> GUI::GetCopyEntries() 
 {
-    std::vector<std::string> entries;
-
-    for (auto& d : this->_data)
-        entries.push_back(d.shortcut);
-
-    auto screen = ScreenInteractive::TerminalOutput();
-    int selected_entry = 0;
-
-    MenuOption option;
-    option.on_enter = [&] {
-        this->entry = selected_entry;  // Save the selected entry
-        screen.ExitLoopClosure()();
-       
-    };
-
-    auto menu = Menu(&entries, &selected_entry, option);
-    screen.Loop(menu);
-
-    system("cls");
-    DrawCopyMenu(screen);
-}
-
-void GUI::DrawCopyMenu(ftxui::ScreenInteractive& screen) noexcept 
-{
-    std::vector<std::string> copy_entries = 
-    {
+    return {
         "Name:   " + this->_data[this->entry].shortcut,
         "URL:    " + this->_data[this->entry].url,
         "Login:  ********",
         "Pass:   ********",
-        "back",
-        "exit"
     };
+}
 
-    int selected_copy_entry = 0;
+void GUI::DrawMenu() noexcept 
+{
+    std::vector<std::string> entries;
+    for (const auto& entry : _data)
+        entries.push_back(entry.shortcut);
 
-    MenuOption copy_option;
-    copy_option.on_enter = [&] 
-    {
-        switch (selected_copy_entry) 
-        {
-            case 0:
-                break;
-            case 1:
-                ShellExecute(0, 0, this->_data[this->entry].url.c_str(), 0, 0 , SW_SHOW );
-                break;
-            case 2:
-                CopyToClipboard(this->_data[this->entry].login);
-                break;
-            case 3:
-                CopyToClipboard(this->_data[this->entry].password);
-                break;
-            case 4:
-                screen.ExitLoopClosure()();
-                DrawMenu();  // Go back to main menu
-                return;
-            case 5:
-                screen.Exit();
-                std::exit(0);
-                break;
-            default:
-                break;
+    auto screen = ScreenInteractive::Fullscreen();
+
+    int shortcut_selected = 0;
+    int copy_selected = 0;
+
+    bool show_copy_menu = false;
+
+    // Начальное меню
+    auto shortcut_menu = Menu(&entries, &shortcut_selected);
+    auto copy_entries = GetCopyEntries();
+    auto copy_menu = Menu(&copy_entries, &copy_selected);
+
+    auto container = Container::Vertical({
+        shortcut_menu,
+        copy_menu,
+    });
+
+    auto render = Renderer(container, [&] {
+        if (show_copy_menu) {
+            return vbox({
+                text("Your Data: ") | bold,
+                copy_menu->Render(),
+                text("Press 'q' to go back")
+            });
+        } else {
+            return vbox({
+                text("passget v1.0.0") | bold,
+                shortcut_menu->Render(),
+                text("Press 'Enter' to select")
+            });
         }
-    };
+    });
 
-    auto copy_menu = Menu(&copy_entries, &selected_copy_entry, copy_option);
-    screen.Loop(copy_menu);
+    auto main_component = CatchEvent(render, [&](Event event) 
+    {
+        if (event == Event::Return) 
+        {
+            if (!show_copy_menu) 
+            {
+                this->entry = shortcut_selected;
+                show_copy_menu = true;
+                copy_entries = GetCopyEntries();
+                copy_menu = Menu(&copy_entries, &copy_selected);
+                container->DetachAllChildren();
+                container->Add(shortcut_menu);
+                container->Add(copy_menu);
+            } 
+            else 
+            {
+                switch (copy_selected) 
+                {
+                    case 1:
+                        ShellExecute(0, 0, this->_data[this->entry].url.c_str(), 0, 0, SW_SHOW);
+                        break;
+                    case 2:
+                        CopyToClipboard(this->_data[this->entry].login);
+                        break;
+                    case 3:
+                        CopyToClipboard(this->_data[this->entry].password);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return true;
+        } 
+        else if (event == Event::Character('q')) 
+        {
+            show_copy_menu = false;
+            copy_selected = 0;
+            return true;
+        }
+        return false;
+    });
+
+    screen.Loop(main_component);
 }
 
 void GUI::AddData() noexcept
 {
-    // The data:
     std::string shortcut;
     std::string url;
     std::string login;
     std::string password;
+    std::string info_text = "";
+
+    bool saved = false;
 
     Component input_shortcut = Input(&shortcut, "Shortcut");
     Component input_url = Input(&url, "URL");
     Component input_login = Input(&login, "Login");
     Component input_password = Input(&password, "Password");
 
-    Component button_exit = Button("Exit", [&] 
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    Component button_exit = Button("Save", [&] 
     {
         if(shortcut != "" && login != "" && password != "")
         {
@@ -173,10 +201,11 @@ void GUI::AddData() noexcept
                 url = " ";
 
             AddToFile(shortcut, url, login, password);
+            info_text = " Saved";
+            screen.Exit();
         }
         else
-            std::cout << "Not all fields are filled." << std::endl;
-        std::exit(0);
+            info_text = " Fill all fields";
     });
 
     auto component = Container::Vertical({
@@ -193,12 +222,10 @@ void GUI::AddData() noexcept
             hbox(text(" URL : "), input_url->Render()),
             hbox(text(" Login : "), input_login->Render()),
             hbox(text(" Password : "), input_password->Render()),
+            hbox(text(info_text)),
             button_exit->Render()
         }) | border;
     });
 
-    auto screen = ScreenInteractive::TerminalOutput();
-
     screen.Loop(renderer);
 }
-

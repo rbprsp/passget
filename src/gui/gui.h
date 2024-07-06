@@ -13,7 +13,7 @@ private:
     std::vector<Credits> _data;
     int entry = 0;
 
-    
+    std::vector<std::string> GetCopyEntries();
 
 public:
     GUI(std::vector<Credits> data) : _data(data) {} 
