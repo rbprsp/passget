@@ -127,24 +127,19 @@ void GUI::DrawMenu() noexcept
 
     auto main_component = CatchEvent(render, [&](Event event) 
     {
-        if (event == Event::Return) 
+        if (show_copy_menu) 
         {
-            if (!show_copy_menu) 
+            if (event == Event::ArrowDown || event == Event::ArrowRight) 
             {
-                this->entry = shortcut_selected;
-                show_copy_menu = true;
-                copy_entries = {
-                    "Name:   " + this->_data[this->entry].shortcut,
-                    "URL:    " + this->_data[this->entry].url,
-                    "Login:  ********",
-                    "Pass:   ********",
-                };
-                copy_menu = Menu(&copy_entries, &copy_selected);
-                container->DetachAllChildren();
-                container->Add(shortcut_menu);
-                container->Add(copy_menu);
+                copy_selected = (copy_selected + 1) % copy_entries.size();
+                return true;
             } 
-            else 
+            else if (event == Event::ArrowUp || event == Event::ArrowLeft) 
+            {
+                copy_selected = (copy_selected - 1 + copy_entries.size()) % copy_entries.size();
+                return true;
+            } 
+            else if (event == Event::Return) 
             {
                 switch (copy_selected) 
                 {
@@ -160,15 +155,46 @@ void GUI::DrawMenu() noexcept
                     default:
                         break;
                 }
+                return true;
+            } 
+            else if (event == Event::Character('q')) 
+            {
+                show_copy_menu = false;
+                copy_selected = 0;
+
+                container->DetachAllChildren();
+                container->Add(shortcut_menu);
+                screen.PostEvent(Event::Custom);
+                return true;
             }
-            return true;
         } 
-        else if (event == Event::Character('q')) 
+        else 
         {
-            show_copy_menu = false;
-            copy_selected = 0;
-            screen.PostEvent(Event::Custom);
-            return true;
+            if (event == Event::ArrowDown || event == Event::ArrowRight) 
+            {
+                shortcut_selected = (shortcut_selected + 1) % entries.size();
+                return true;
+            } 
+            else if (event == Event::ArrowUp || event == Event::ArrowLeft) 
+            {
+                shortcut_selected = (shortcut_selected - 1 + entries.size()) % entries.size();
+                return true;
+            } 
+            else if (event == Event::Return) 
+            {
+                this->entry = shortcut_selected;
+                show_copy_menu = true;
+                copy_entries = { 
+                    "Name:   " + this->_data[this->entry].shortcut, 
+                    "URL:    " + this->_data[this->entry].url, 
+                    "Login:  ********", 
+                    "Pass:   ********" 
+                };
+                copy_menu = Menu(&copy_entries, &copy_selected);
+                container->DetachAllChildren();
+                container->Add(copy_menu);
+                return true;
+            }
         }
         return false;
     });
