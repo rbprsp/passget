@@ -82,16 +82,6 @@ void CopyToClipboard(const std::string& text)
 
 using namespace ftxui;
 
-std::vector<std::string> GUI::GetCopyEntries() 
-{
-    return {
-        "Name:   " + this->_data[this->entry].shortcut,
-        "URL:    " + this->_data[this->entry].url,
-        "Login:  ********",
-        "Pass:   ********",
-    };
-}
-
 void GUI::DrawMenu() noexcept 
 {
     std::vector<std::string> entries;
@@ -105,9 +95,13 @@ void GUI::DrawMenu() noexcept
 
     bool show_copy_menu = false;
 
-    // Начальное меню
     auto shortcut_menu = Menu(&entries, &shortcut_selected);
-    auto copy_entries = GetCopyEntries();
+    std::vector<std::string> copy_entries = {
+        "Name:   " + this->_data[this->entry].shortcut,
+        "URL:    " + this->_data[this->entry].url,
+        "Login:  ********",
+        "Pass:   ********",
+    };
     auto copy_menu = Menu(&copy_entries, &copy_selected);
 
     auto container = Container::Vertical({
@@ -139,7 +133,12 @@ void GUI::DrawMenu() noexcept
             {
                 this->entry = shortcut_selected;
                 show_copy_menu = true;
-                copy_entries = GetCopyEntries();
+                copy_entries = {
+                    "Name:   " + this->_data[this->entry].shortcut,
+                    "URL:    " + this->_data[this->entry].url,
+                    "Login:  ********",
+                    "Pass:   ********",
+                };
                 copy_menu = Menu(&copy_entries, &copy_selected);
                 container->DetachAllChildren();
                 container->Add(shortcut_menu);
@@ -168,6 +167,7 @@ void GUI::DrawMenu() noexcept
         {
             show_copy_menu = false;
             copy_selected = 0;
+            screen.PostEvent(Event::Custom);
             return true;
         }
         return false;
