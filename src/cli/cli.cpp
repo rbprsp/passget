@@ -9,7 +9,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "gui.h"
+#include "cli.h"
 
 #define FILENAME "/data.json"
 
@@ -82,7 +82,7 @@ void CopyToClipboard(const std::string& text)
 
 using namespace ftxui;
 
-void GUI::DrawMenu() noexcept 
+void CLI::DrawMenu() noexcept 
 {
     std::vector<std::string> entries;
     for (const auto& entry : _data)
@@ -136,7 +136,7 @@ void GUI::DrawMenu() noexcept
             } 
             else if (event == Event::ArrowUp || event == Event::ArrowLeft) 
             {
-                copy_selected = (copy_selected - 1 + copy_entries.size()) % copy_entries.size();
+                copy_selected = (copy_selected - 1 + copy_entries.size()) % (int)copy_entries.size();
                 return true;
             } 
             else if (event == Event::Return) 
@@ -167,7 +167,7 @@ void GUI::DrawMenu() noexcept
                 screen.PostEvent(Event::Custom);
                 return true;
             }
-        } 
+        }
         else 
         {
             if (event == Event::ArrowDown || event == Event::ArrowRight) 
@@ -177,7 +177,7 @@ void GUI::DrawMenu() noexcept
             } 
             else if (event == Event::ArrowUp || event == Event::ArrowLeft) 
             {
-                shortcut_selected = (shortcut_selected - 1 + entries.size()) % entries.size();
+                shortcut_selected = (shortcut_selected - 1 + entries.size()) % (int)entries.size();
                 return true;
             } 
             else if (event == Event::Return) 
@@ -202,7 +202,7 @@ void GUI::DrawMenu() noexcept
     screen.Loop(main_component);
 }
 
-void GUI::AddData() noexcept
+void CLI::AddData() noexcept
 {
     std::string shortcut;
     std::string url;

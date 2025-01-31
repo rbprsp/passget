@@ -1,5 +1,5 @@
-#ifndef __GUI_H__
-#define __GUI_H__
+#ifndef __CLI_H__
+#define __CLI_H__
 
 #include <vector>
 
@@ -7,14 +7,14 @@
 
 #include "utils.h"
 
-class GUI
+class CLI
 {
 private:
     std::vector<Credits> _data;
     int entry = 0;
 
 public:
-    GUI(std::vector<Credits> data) : _data(data) {} 
+    CLI(std::vector<Credits> data) : _data(data) {} 
     void DrawMenu() noexcept;
     void DrawCopyMenu(ftxui::ScreenInteractive& screen) noexcept;
 
