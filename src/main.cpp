@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "gui.h"
+#include "cli.h"
 #include "manager.h"
 
 int main(int argc, char** argv)
@@ -15,19 +15,19 @@ int main(int argc, char** argv)
     }
 
 
-    Manager *mng = new Manager();
-    mng->InitializeFile();
+    Manager mng;
+    mng.InitializeFile();
 
-    GUI *gui = new GUI(mng->GetData());
+    CLI cli(mng.GetData());
     
 
     if(add)
     {
-        gui->AddData();
+        cli.AddData();
     }
     else
     {
-        gui->DrawMenu();
+        cli.DrawMenu();
     }
     return 0;
 }
