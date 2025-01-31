@@ -11,21 +11,20 @@ project(${PROJECT_NAME}
 set(CMAKE_CXX_STANDARD 17)
 set(EXECUTABLE_OUTPUT_PATH "../bin")
 
-option(FTXUI_QUIET ON)
+option(FTXUI_QUIET "" ON)
 option(FTXUI_BUILD_EXAMPLES OFF)
 
 include_directories(deps/json)
 include_directories(src/utils)
-include_directories(src/gui)
+include_directories(src/cli)
 include_directories(src/manager)
-
 
 add_subdirectory(deps/ftxui)
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
         src/manager/manager.cpp
-        src/gui/gui.cpp
+        src/cli/cli.cpp
         src/utils/utils.h
 )
 
