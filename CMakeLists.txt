@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.25)
 
 cmake_path(GET CMAKE_SOURCE_DIR FILENAME PROJECT_ID)
 string(REPLACE " " "_" PROJECT_NAME ${PROJECT_ID})
