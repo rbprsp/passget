@@ -13,7 +13,7 @@ private:
     std::string file_name = "/data.json";
 
 public:
-    void InitializeFile() noexcept;
+    void InitializeFile();
     [[nodiscard]] std::vector<Credits> GetData() noexcept;
 };
 
